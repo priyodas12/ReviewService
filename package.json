@@ -12,6 +12,7 @@
 		"cassandra-driver": "^4.7.2",
 		"express": "^4.18.2",
 		"faker": "^6.6.6",
+		"random-date-generator": "^1.0.2",
 		"review-app": "file:",
 		"uuid": "^10.0.0"
 	},

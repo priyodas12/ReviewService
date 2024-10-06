@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const cassandra = require('cassandra-driver');
 const { faker } = require('@faker-js/faker');
-
+let dateGenerator = require('random-date-generator');
 class Product {
 	static products = [];
 
@@ -22,22 +22,38 @@ class Product {
 
 		const desc1 = faker.food.ingredient() + '' + desc;
 
-		const id = faker.number.int();
+		const newlyCreatedProductId = faker.number.int();
 
-		console.log('addProducts', id, uuid, name1, desc1);
+		const availableFromDate = Product.randomDate(
+			new Date(2020, 2, 3),
+			new Date(2024, 2, 3),
+		);
+
+		const isAvailableNow = Product.randomBooleanValue();
+
+		const price = Product.randomDeciamlValue();
+
+		console.log('addProducts', newlyCreatedProductId, uuid, name1, desc1);
 		const query =
-			'INSERT INTO products (product_id,product_uuid,product_name,product_description) VALUES (?,?,?,?)';
+			'INSERT INTO products (product_id,product_uuid,product_name,product_description,available_creation_date,is_available_now,price) VALUES (?,?,?,?,?,?,?)';
 
 		const savedProduct = await this.client.execute(
 			query,
-			[id, uuid, name1, desc1],
+			[
+				newlyCreatedProductId,
+				uuid,
+				name1,
+				desc1,
+				availableFromDate,
+				isAvailableNow,
+				price,
+			],
 			{ prepare: true },
 		);
 
-		const { productId, productUUID, productName, productDescription } =
-			savedProduct;
+		console.log('After saving product', savedProduct);
 
-		return { productId, productUUID, productName, productDescription };
+		return newlyCreatedProductId;
 	}
 
 	async findbyProductName(productName) {
@@ -76,6 +92,18 @@ class Product {
 
 		return result.rows;
 	}
+
+	static randomDate = (start, end) => {
+		return dateGenerator.getRandomDateInRange(start, end);
+	};
+
+	static randomBooleanValue = () => {
+		return Math.random() >= 0.5;
+	};
+
+	static randomDeciamlValue = () => {
+		return Math.random() * 100000;
+	};
 }
 
 module.exports = Product;

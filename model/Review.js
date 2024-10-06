@@ -1,6 +1,7 @@
 const { faker } = require('@faker-js/faker');
 const cassandra = require('cassandra-driver');
 const { v4: uuidv4 } = require('uuid');
+const Product = require('./product');
 
 class Review {
 	constructor(client) {
@@ -16,16 +17,41 @@ class Review {
 
 		const uuid = uuidv4();
 
-		const query =
-			'INSERT INTO review_service.reviews (review_id,review_uuid,product_id,review_details) VALUES (?,?,?,?)';
+		const reviewCreateTimestamp = Product.randomDate(
+			new Date(2020, 2, 3),
+			new Date(2024, 2, 3),
+		);
 
-		const savedProduct = await this.client.execute(
+		const reviewUpdateTimestamp = Product.randomDate(
+			reviewCreateTimestamp,
+			new Date(2024, 12, 12),
+		);
+
+		const country = this.randomCountry();
+
+		const rating = this.randomRating();
+
+		const query =
+			'INSERT INTO review_service.reviews' +
+			' (review_id, review_uuid, product_id, review_details,review_create_timestamp,review_rating,review_country,review_update_time_stamp ) ' +
+			'VALUES(?,?,?,?,?,?,?,?)';
+
+		const savedReview = await this.client.execute(
 			query,
-			[id, uuid, productId, review],
+			[
+				id,
+				uuid,
+				productId,
+				review,
+				reviewCreateTimestamp,
+				rating,
+				country,
+				reviewUpdateTimestamp,
+			],
 			{ prepare: true },
 		);
 
-		return { id, uuid, productId, review };
+		return id;
 	}
 
 	async findbyReviewId(productId) {
@@ -43,5 +69,29 @@ class Review {
 
 		return result.rows;
 	}
+
+	randomRating = () => {
+		const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+		const randomIndex = Math.floor(Math.random() * arr.length);
+		return arr[randomIndex];
+	};
+
+	randomCountry = () => {
+		const arr = [
+			'IN',
+			'CH',
+			'GB',
+			'NL',
+			'US',
+			'IS',
+			'IR',
+			'RU',
+			'UC',
+			'UEA',
+			'JP',
+		];
+		const randomIndex = Math.floor(Math.random() * arr.length);
+		return arr[randomIndex];
+	};
 }
 module.exports = Review;
