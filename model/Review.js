@@ -1,5 +1,6 @@
-const { faker } = require( "@faker-js/faker" );
-const cassandra = require( 'cassandra-driver' );
+const { faker } = require('@faker-js/faker');
+const cassandra = require('cassandra-driver');
+const { v4: uuidv4 } = require('uuid');
 
 class Review {
 	constructor(client) {
@@ -9,20 +10,22 @@ class Review {
 	async addReview(productId, reviewDetails) {
 		console.log('addReview');
 
-		const review = faker.music.genre() + ',' + reviewDetails;
+		const review = faker.food.description() + ',' + reviewDetails;
 
 		const id = faker.number.int();
 
+		const uuid = uuidv4();
+
 		const query =
-			'INSERT INTO review_service.reviews (review_id,product_id,review_details) VALUES (?,?,?)';
+			'INSERT INTO review_service.reviews (review_id,review_uuid,product_id,review_details) VALUES (?,?,?,?)';
 
 		const savedProduct = await this.client.execute(
 			query,
-			[id, productId, reviewDetails],
+			[id, uuid, productId, review],
 			{ prepare: true },
 		);
 
-		return { id, productId, reviewDetails };
+		return { id, uuid, productId, review };
 	}
 
 	async findbyReviewId(productId) {
@@ -41,5 +44,4 @@ class Review {
 		return result.rows;
 	}
 }
-module.exports = Review; 
-
+module.exports = Review;

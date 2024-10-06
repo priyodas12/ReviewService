@@ -1,5 +1,5 @@
-const { v4: uuidv4 } = require( 'uuid' );
-const cassandra = require( 'cassandra-driver' );
+const { v4: uuidv4 } = require('uuid');
+const cassandra = require('cassandra-driver');
 const { faker } = require('@faker-js/faker');
 
 class Product {
@@ -11,32 +11,31 @@ class Product {
 		this.client = client;
 	}
 
-    async addProducts ( name, desc )
-    {
-        
+	async addProducts(name, desc) {
 		console.log('addProducts');
 
 		const uuid = uuidv4();
 
 		console.log('addProducts', uuid);
 
-		const name1 = faker.food.dish()+''+name;
+		const name1 = faker.food.dish() + '' + name;
 
-        const desc1 = faker.food.description() + '' + desc;
-        
-        const id = faker.number.int();
+		const desc1 = faker.food.ingredient() + '' + desc;
 
-        console.log('addProducts', id,uuid,name1,desc1);
+		const id = faker.number.int();
+
+		console.log('addProducts', id, uuid, name1, desc1);
 		const query =
 			'INSERT INTO products (product_id,product_uuid,product_name,product_description) VALUES (?,?,?,?)';
 
 		const savedProduct = await this.client.execute(
 			query,
-			[id,uuid, name1, desc1],
+			[id, uuid, name1, desc1],
 			{ prepare: true },
-        );
-        
-        const { productId, productUUID, productName, productDescription } = savedProduct;
+		);
+
+		const { productId, productUUID, productName, productDescription } =
+			savedProduct;
 
 		return { productId, productUUID, productName, productDescription };
 	}
@@ -67,7 +66,7 @@ class Product {
 		const result = await this.client.execute(query, [productId], {
 			prepare: true,
 		});
-        console.log(result.rows);
+		console.log(result.rows);
 		return result.rows[0];
 	}
 
