@@ -8,14 +8,13 @@ class Review {
 		this.client = client;
 	}
 
-	async addReview(productId, reviewDetails) {
-		console.log('addReview');
+	async addReview(productId, reviewDetailsInfo) {
+		const reviewDetails =
+			faker.food.description() + ',' + reviewDetailsInfo;
 
-		const review = faker.food.description() + ',' + reviewDetails;
+		const reviewId = faker.number.int();
 
-		const id = faker.number.int();
-
-		const uuid = uuidv4();
+		const reviewUUID = uuidv4();
 
 		const reviewCreateTimestamp = Product.randomDate(
 			new Date(2020, 2, 3),
@@ -27,9 +26,9 @@ class Review {
 			new Date(2024, 12, 12),
 		);
 
-		const country = this.randomCountry();
+		const reviewCountry = this.randomCountry();
 
-		const rating = this.randomRating();
+		const reviewRating = this.randomRating();
 
 		const query =
 			'INSERT INTO review_service.reviews' +
@@ -39,19 +38,28 @@ class Review {
 		const savedReview = await this.client.execute(
 			query,
 			[
-				id,
-				uuid,
+				reviewId,
+				reviewUUID,
 				productId,
-				review,
+				reviewDetails,
 				reviewCreateTimestamp,
-				rating,
-				country,
+				reviewRating,
+				reviewCountry,
 				reviewUpdateTimestamp,
 			],
 			{ prepare: true },
 		);
 
-		return id;
+		return {
+			reviewId,
+			reviewUUID,
+			productId,
+			reviewDetails,
+			reviewCreateTimestamp,
+			reviewRating,
+			reviewCountry,
+			reviewUpdateTimestamp,
+		};
 	}
 
 	async findbyReviewId(productId) {
@@ -60,14 +68,39 @@ class Review {
 			prepare: true,
 		});
 		console.log(result.rows);
-		return result.rows[0];
+
+		const reviewFetched = result.rows[0];
+
+		const reformattedReview = {
+			reviewId: reviewFetched.review_id,
+			reviewUUID: reviewFetched.review_uuid,
+			productId: reviewFetched.product_id,
+			reviewDetails: reviewFetched.review_details,
+			reviewCreateTimestamp: reviewFetched.review_create_timestamp,
+			reviewRating: reviewFetched.review_rating,
+			reviewCountry: reviewFetched.review_country,
+			reviewUpdateTimestamp: reviewFetched.review_update_time_stamp,
+		};
+		return reformattedReview;
 	}
 
 	async getEveryReviews() {
 		const query = 'SELECT * FROM review_service.reviews';
 		const result = await this.client.execute(query, { prepare: true });
 
-		return result.rows;
+		return result.rows.map((reviewFetched) => {
+			const reformattedReview = {
+				reviewId: reviewFetched.review_id,
+				reviewUUID: reviewFetched.review_uuid,
+				productId: reviewFetched.product_id,
+				reviewDetails: reviewFetched.review_details,
+				reviewCreateTimestamp: reviewFetched.review_create_timestamp,
+				reviewRating: reviewFetched.review_rating,
+				reviewCountry: reviewFetched.review_country,
+				reviewUpdateTimestamp: reviewFetched.review_update_time_stamp,
+			};
+			return reformattedReview;
+		});
 	}
 
 	randomRating = () => {
