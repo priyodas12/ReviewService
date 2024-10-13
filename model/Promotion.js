@@ -16,17 +16,24 @@ class Promotion {
 
 		const promotionUUID = uuidv4();
 
-		const promotionCreateTimestamp = Product.randomDate(
+		const promotionStartTimestamp = Product.randomDate(
 			new Date(2020, 2, 3),
 			new Date(2024, 2, 3),
 		);
 
-		const promotionRating = this.randomRating();
+		const promotionEndTimestamp = Product.randomDate(
+			promotionStartTimestamp,
+			new Date(2024, 12, 12),
+		);
+
+		const promotionType = this.randomDiscoutnType();
+
+		const discountPercentage = this.randomDiscountPercentage();
 
 		const query =
 			'INSERT INTO review_service.promotions' +
-			' (promotion_id, promotion_uuid, product_id, promotion_details,promotion_create_timestamp,promotion_rating ) ' +
-			'VALUES(?,?,?,?,?,?)';
+			' (promotion_id, promotion_uuid, product_id, promotion_details, promotion_start_timestamp, promotion_end_timestamp, promotion_type, discount_percentage ) ' +
+			'VALUES (?,?,?,?,?,?,?,?)';
 
 		const savedPromotion = await this.client.execute(
 			query,
@@ -35,8 +42,10 @@ class Promotion {
 				promotionUUID,
 				productId,
 				promotionDetailsEnhanced,
-				promotionCreateTimestamp,
-				promotionRating,
+				promotionStartTimestamp,
+				promotionEndTimestamp,
+				promotionType,
+				discountPercentage,
 			],
 			{ prepare: true },
 		);
@@ -46,8 +55,10 @@ class Promotion {
 			promotionUUID,
 			productId,
 			promotionDetailsEnhanced,
-			promotionCreateTimestamp,
-			promotionRating,
+			promotionStartTimestamp,
+			promotionEndTimestamp,
+			promotionType,
+			discountPercentage,
 		};
 	}
 
@@ -67,11 +78,38 @@ class Promotion {
 			promotionUUID: promotionFetched.promotion_uuid,
 			productId: promotionFetched.product_id,
 			promotionDetails: promotionFetched.promotion_details,
-			promotionCreateTimestamp:
-				promotionFetched.promotion_create_timestamp,
-			promotionRating: promotionFetched.promotion_rating,
+			promotionStartTimestamp: promotionFetched.promotion_start_timestamp,
+			promotionEndTimestamp: promotionFetched.promotion_end_timestamp,
+			promotionType: promotionFetched.promotion_type,
+			discountPercentage: promotionFetched.discount_percentage,
 		};
 		return reformattedPromotion;
+	}
+
+	async findPromotionByProductId(productId) {
+		const query =
+			'SELECT * FROM review_service.promotions WHERE product_id=? ALLOW FILTERING';
+		const result = await this.client.execute(query, [productId], {
+			prepare: true,
+		});
+		console.log(result.rows);
+		//return result.rows[ 0 ];
+
+		return result.rows.map((promotionFetched) => {
+			const reformattedPromotion = {
+				promotionId: promotionFetched.promotion_id,
+				promotionUUID: promotionFetched.promotion_uuid,
+				productId: promotionFetched.product_id,
+				promotionDetails: promotionFetched.promotion_details,
+				promotionStartTimestamp:
+					promotionFetched.promotion_start_timestamp,
+				promotionEndTimestamp:
+					promotionFetched.promotion_end_timestamp,
+				promotionType: promotionFetched.promotion_type,
+				discountPercentage: promotionFetched.discount_percentage,
+			};
+			return reformattedPromotion;
+		});
 	}
 
 	async getEveryPromotions() {
@@ -84,16 +122,37 @@ class Promotion {
 				promotionUUID: promotionFetched.promotion_uuid,
 				productId: promotionFetched.product_id,
 				promotionDetails: promotionFetched.promotion_details,
-				promotionCreateTimestamp:
-					promotionFetched.promotion_create_timestamp,
-				promotionRating: promotionFetched.promotion_rating,
+				promotionStartTimestamp:
+					promotionFetched.promotion_start_timestamp,
+				promotionEndtTimestamp:
+					promotionFetched.promotion_end_timestamp,
+				promotionType: promotionFetched.promotion_type,
+				discountPercentage: promotionFetched.discount_percentage,
 			};
 			return promotionFetched;
 		});
 	}
 
-	randomRating = () => {
-		const arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+	randomDiscountPercentage = () => {
+		const arr = [20, 10, 25, 30, 40, 50, 60, 45, 15, 35, 5];
+		const randomIndex = Math.floor(Math.random() * arr.length);
+		return arr[randomIndex];
+	};
+
+	randomDiscoutnType = () => {
+		const arr = [
+			'SUMMER',
+			'WINTER',
+			'CHRISTMAS',
+			'DIWALI',
+			'EID',
+			'BBD',
+			'ESTER',
+			'BLACK FRIDAY',
+			'CYBER MONDAY',
+			'NEW YEAR',
+			'YEAR END',
+		];
 		const randomIndex = Math.floor(Math.random() * arr.length);
 		return arr[randomIndex];
 	};

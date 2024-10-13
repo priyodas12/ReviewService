@@ -30,6 +30,9 @@ const product = new Product(client);
 const review = new Review( client );
 const promotion = new Promotion( client );
 
+const SUCCESS = 'Success';
+const FAILURE = 'Failure';
+
 ///****************** CREATE PRODUCT ****************///
 
 const validateProduct = (productName, productDescription) => {
@@ -67,7 +70,7 @@ app.post('/products', (req, res) => {
 				createdProductInfo,
 			);
 			return res.status(201).json({
-				message: 'Product Created Successfully!',
+				message: SUCCESS,
 				time: new Date(),
 				product: createdProductInfo,
 				traceId: uuidv4(),
@@ -79,17 +82,17 @@ app.post('/products', (req, res) => {
 				error,
 			);
 			return res.status(500).json({
-				message: 'Failed to save in cassendra db',
+				message: FAILURE,
 			});
 		});
 });
 
 ///****************** CREATE PRODUCT ****************///
 
-///****************** FETCH PRODUCT ****************///
+///****************** FETCH PRODUCT BY ID ****************///
 
 const fetchProductById = (productId) => {
-	console.log('Fetching Product: ', productId);
+	console.log('*******************************Fetching Product: ', productId);
 	return product
 		.findbyProductId(productId)
 		.then((fetchedProduct) => {
@@ -104,21 +107,23 @@ app.get('/products/:productId', (req, res) => {
 
 	fetchProductById(productId)
 		.then((fetchedProductData) => {
-			console.info('Successfully fetched in cassendra db');
+			console.info(
+				'************************Successfully fetched in cassendra db',
+			);
 			return res.status(201).json({
-				message: 'Product Fetched Successfully!',
-				productInfo: fetchedProductData,
+				message: SUCCESS,
+				product: fetchedProductData,
 			});
 		})
 		.catch((error) => {
 			console.error('Failed to fetch from cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to fetch from cassendra db',
+				message: FAILURE,
 			});
 		});
 });
 
-///****************** FETCH PRODUCT ****************///
+///****************** FETCH PRODUCT BY ID ****************///
 
 ///****************** FETCH ALL PRODUCTS ****************///
 
@@ -138,14 +143,14 @@ app.get('/products', (req, res) => {
 		.then((fetchedProductData) => {
 			console.info('Successfully fetched all products from cassendra db');
 			return res.status(201).json({
-				message: 'Product all products from Successfully!',
+				message: SUCCESS,
 				productInfo: fetchedProductData,
 			});
 		})
 		.catch((error) => {
 			console.error('Failed to fetch from cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to fetch from cassendra db',
+				message: FAILURE,
 			});
 		});
 });
@@ -166,12 +171,6 @@ const validateReview = (productIdDetails, description) => {
 			console.log('Invalid Review details!', results);
 			return reject(new Error('Invalid product id!'));
 		}
-		let id = 0;
-		let desc = '';
-		results.then((productInfo) => {
-			// @ts-ignore
-			id = productInfo.productId;
-		});
 
 		resolve({ productIdDetails, description });
 	});
@@ -180,7 +179,7 @@ const validateReview = (productIdDetails, description) => {
 const saveReviewToCassendraDb = (r) => {
 	console.log('Saving Review: ', r);
 	return review
-		.addReview(r.productId, r.description)
+		.addReview(r.productIdDetails, r.description)
 		.then((savedReviewId) => {
 			console.log('Saved Review Id:: ', savedReviewId);
 			return savedReviewId;
@@ -189,29 +188,34 @@ const saveReviewToCassendraDb = (r) => {
 };
 
 app.post('/reviews', (req, res) => {
-	const { productId, description } = req.body;
-	validateReview(productId, description)
+	const { productId, reviewDetails } = req.body;
+	validateReview(productId, reviewDetails)
 		.then((reviewData) => {
-			console.log('Saving to database');
+			console.log(
+				'*********************Saving to database',
+				productId,
+				reviewDetails,
+				reviewData,
+			);
 			return saveReviewToCassendraDb(reviewData);
 		})
 		.then((savedReviewId) => {
 			console.info('Successfully saved in cassendra db', savedReviewId);
 			return res.status(201).json({
-                message: 'Review Created Successfully!',
-                traceId: uuidv4(),
-                time: new Date(),
+				message: SUCCESS,
+				traceId: uuidv4(),
+				time: new Date(),
 				review: savedReviewId,
 			});
 		})
 		.catch((error) => {
 			console.error('Failed to saved in cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to saved in cassendra db',
+				message: FAILURE,
 			});
 		});
 });
-///****************** CREATE PRODUCT ****************///
+///****************** CREATE REVIEW ****************///
 
 ///****************** FETCH REVIEW ****************///
 
@@ -233,19 +237,53 @@ app.get('/reviews/:reviewId', (req, res) => {
 		.then((fetchedReviewData) => {
 			console.info('Successfully fetched in cassendra db');
 			return res.status(201).json({
-				message: 'Review Fetched Successfully!',
+				message: SUCCESS,
 				productInfo: fetchedReviewData,
 			});
 		})
 		.catch((error) => {
 			console.error('Failed to fetch from cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to fetch from cassendra db',
+				message: FAILURE,
 			});
 		});
 });
 
 ///****************** FETCH REVIEW ****************///
+
+///****************** FETCH REVIEW BY PRODUCT ID****************///
+
+const fetchReviewByProductId = (productId) => {
+	console.log('Fetching Review: ', productId);
+	return review
+		.findReviewByProductId(productId)
+		.then((fetchedReview) => {
+			console.log('fetchedProduct', fetchedReview);
+			return fetchedReview;
+		})
+		.catch((error) => console.log(error));
+};
+
+app.get('/reviews/product/:productId', (req, res) => {
+	const { productId } = req.params;
+
+	fetchReviewByProductId(productId)
+		.then((fetchedReviewData) => {
+			console.info('Successfully fetched in cassendra db');
+			return res.status(201).json({
+				message: SUCCESS,
+				reviewList: fetchedReviewData,
+			});
+		})
+		.catch((error) => {
+			console.error('Failed to fetch from cassendra db', error);
+			return res.status(500).json({
+				message: FAILURE,
+			});
+		});
+});
+
+///****************** FETCH REVIEW BY PRODUCT ID ****************///
 
 ///****************** FETCH ALL REVIEW ****************///
 
@@ -261,26 +299,23 @@ const fetchAllReviews = () => {
 };
 
 app.get('/reviews', (req, res) => {
-    
-    fetchAllReviews()
+	fetchAllReviews()
 		.then((fetchAllReviews) => {
 			console.info('Successfully fetched all reviews from cassendra db');
 			return res.status(201).json({
-				message: 'Product all reviews from Successfully!',
+				message: SUCCESS,
 				productInfo: fetchAllReviews,
 			});
 		})
 		.catch((error) => {
 			console.error('Failed to fetch from cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to fetch from cassendra db',
+				message: FAILURE,
 			});
 		});
-    
 });
 
 ///****************** FETCH ALL REVIEW ****************///
-
 
 ///****************** CREATE PROMOTION ****************///
 
@@ -331,7 +366,7 @@ app.post('/promotions', (req, res) => {
 				savedPromotionData,
 			);
 			return res.status(201).json({
-				message: 'Promotion Created Successfully!',
+				message: SUCCESS,
 				traceId: uuidv4(),
 				time: new Date(),
 				promotion: savedPromotionData,
@@ -340,7 +375,7 @@ app.post('/promotions', (req, res) => {
 		.catch((error) => {
 			console.error('Failed to saved in cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to saved in cassendra db',
+				message: FAILURE,
 			});
 		});
 });
@@ -366,19 +401,53 @@ app.get('/promotions/:promotionId', (req, res) => {
 		.then((fetchedPromotion) => {
 			console.info('Successfully fetched in cassendra db');
 			return res.status(201).json({
-				message: 'Review Fetched Successfully!',
+				message: SUCCESS,
 				promotion: fetchedPromotion,
 			});
 		})
 		.catch((error) => {
 			console.error('Failed to fetch from cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to fetch from cassendra db',
+				message: FAILURE,
 			});
 		});
 });
 
 ///****************** FETCH PROMOTION ****************///
+
+///****************** FETCH PROMOTION BY PRODUCT ID ****************///
+
+const fetchPromotionByProductId = (productId) => {
+	console.log('Fetching Promotion: ', productId);
+	return promotion
+		.findPromotionByProductId(productId)
+		.then((fetchedPromotion) => {
+			console.log('fetchedPromotion', fetchedPromotion);
+			return fetchedPromotion;
+		})
+		.catch((error) => console.log(error));
+};
+
+app.get('/promotions/product/:productId', (req, res) => {
+	const { productId } = req.params;
+
+	fetchPromotionByProductId(productId)
+		.then((fetchedPromotion) => {
+			console.info('Successfully fetched from cassendra db');
+			return res.status(201).json({
+				message: SUCCESS,
+				promotionList: fetchedPromotion,
+			});
+		})
+		.catch((error) => {
+			console.error('Failed to fetch from cassendra db', error);
+			return res.status(500).json({
+				message: FAILURE,
+			});
+		});
+});
+
+///****************** FETCH PROMOTION BY PRODUCT ID ****************///
 
 ///****************** FETCH ALL PROMOTION ****************///
 
@@ -394,22 +463,22 @@ const fetchAllPromotions = () => {
 };
 
 app.get('/promotions', (req, res) => {
-    
-    fetchAllPromotions()
+	fetchAllPromotions()
 		.then((allFetchedPromotions) => {
-			console.info('Successfully fetched all Promotions from cassendra db');
+			console.info(
+				'Successfully fetched all Promotions from cassendra db',
+			);
 			return res.status(201).json({
-				message: 'Promotion fetched Successfully!',
+				message: SUCCESS,
 				promotionList: allFetchedPromotions,
 			});
 		})
 		.catch((error) => {
 			console.error('Failed to fetch from cassendra db', error);
 			return res.status(500).json({
-				message: 'Failed to fetch from cassendra db',
+				message: FAILURE,
 			});
 		});
-    
 });
 
 ///****************** FETCH ALL PROMOTION ****************///

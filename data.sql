@@ -27,11 +27,13 @@ CREATE TABLE review_service.promotions (
     promotion_id BIGINT,   
     promotion_uuid UUID ,
     product_id BIGINT,
-    promotion_rating INT,
-    promotion_create_timestamp TIMESTAMP,
     promotion_details TEXT,
+    promotion_create_timestamp TIMESTAMP,
+    promotion_end_timestamp TIMESTAMP,
+    promotion_type TEXT,
+    dicount_percentage INT,
     PRIMARY KEY (promotion_id));
-    
+
 SELECT * FROM review_service.products;
 
 DROP TABLE review_service.products;

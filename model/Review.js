@@ -62,9 +62,9 @@ class Review {
 		};
 	}
 
-	async findbyReviewId(productId) {
+	async findbyReviewId(reviewId) {
 		const query = 'SELECT * FROM review_service.reviews WHERE review_id=?';
-		const result = await this.client.execute(query, [productId], {
+		const result = await this.client.execute(query, [reviewId], {
 			prepare: true,
 		});
 		console.log(result.rows);
@@ -82,6 +82,29 @@ class Review {
 			reviewUpdateTimestamp: reviewFetched.review_update_time_stamp,
 		};
 		return reformattedReview;
+	}
+
+	async findReviewByProductId(productId) {
+		const query =
+			'SELECT * FROM review_service.reviews WHERE product_id=? ALLOW FILTERING';
+		const result = await this.client.execute(query, [productId], {
+			prepare: true,
+		});
+		console.log(result.rows);
+
+		return result.rows.map((reviewFetched) => {
+			const reformattedReview = {
+				reviewId: reviewFetched.review_id,
+				reviewUUID: reviewFetched.review_uuid,
+				productId: reviewFetched.product_id,
+				reviewDetails: reviewFetched.review_details,
+				reviewCreateTimestamp: reviewFetched.review_create_timestamp,
+				reviewRating: reviewFetched.review_rating,
+				reviewCountry: reviewFetched.review_country,
+				reviewUpdateTimestamp: reviewFetched.review_update_time_stamp,
+			};
+			return reformattedReview;
+		});
 	}
 
 	async getEveryReviews() {
