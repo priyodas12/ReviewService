@@ -35,20 +35,20 @@ const FAILURE = 'Failure';
 
 ///****************** CREATE PRODUCT ****************///
 
-const validateProduct = (productName, productDescription) => {
+const validateProduct = (productId,productName, productDescription) => {
 	return new Promise((resolve, reject) => {
 		if (!productName || !productDescription) {
 			console.log('Invalid product details!');
 			//return reject( new Error( "Invalid product details!" ) );
 		}
-		resolve({ productName, productDescription });
+		resolve({productId, productName, productDescription });
 	});
 };
 
 const saveToCassendraDb = (p) => {
 	console.log('Saving object: ', p);
 	return product
-		.addProducts(p.productName, p.productDescription)
+		.addProducts(p.productId,p.productName, p.productDescription)
 		.then((createdProductInfo) => {
 			return createdProductInfo;
 		})
@@ -56,10 +56,10 @@ const saveToCassendraDb = (p) => {
 };
 
 app.post('/products', (req, res) => {
-	const { productName, productDescription } = req.body;
+	const { productId,productName, productDescription } = req.body;
 
 	// Validate product details
-	validateProduct(productName, productDescription)
+	validateProduct(productId,productName, productDescription)
 		.then((productData) => {
 			console.log('1--------------->Saving to database');
 			return saveToCassendraDb(productData);

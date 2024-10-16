@@ -11,7 +11,7 @@ class Product {
 		this.client = client;
 	}
 
-	async addProducts(name, desc) {
+	async addProducts(id, name, desc) {
 		const productUUID = uuidv4();
 
 		console.log('addProducts', productUUID);
@@ -20,7 +20,7 @@ class Product {
 
 		const productDesc = faker.food.ingredient() + '' + desc;
 
-		const newlyCreatedProductId = faker.number.int();
+		const productId = id;
 
 		const productCreateDate = Product.randomDate(
 			new Date(2020, 2, 3),
@@ -33,7 +33,7 @@ class Product {
 
 		console.log(
 			'addProducts',
-			newlyCreatedProductId,
+			productId,
 			productUUID,
 			productName,
 			productDesc,
@@ -44,7 +44,7 @@ class Product {
 		const savedProduct = await this.client.execute(
 			query,
 			[
-				newlyCreatedProductId,
+				productId,
 				productUUID,
 				productName,
 				productDesc,
@@ -56,7 +56,7 @@ class Product {
 		);
 
 		return {
-			newlyCreatedProductId,
+			productId,
 			productUUID,
 			productName,
 			productDesc,
